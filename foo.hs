@@ -14,17 +14,17 @@ import qualified Database.Postgres.Temp as T
 import qualified Opaleye as O
 import           Opaleye ((.==), (./=), (.>), (.>=), (.<), (.<=), (.&&), (.||),
                           (.++))
-import qualified Opaleye.Join as J
+--import qualified Opaleye.Join as J
 import qualified Data.Profunctor as P
-import qualified Data.Profunctor.Product as PP
-import qualified Data.Profunctor.Product.Default as D
+--import qualified Data.Profunctor.Product as PP
+--import qualified Data.Profunctor.Product.Default as D
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstanceInferrable)
 
 import           Control.Exception (bracket)
 import           Data.ByteString (ByteString)
 import           Data.ByteString.Char8 (unpack)
-import           Data.String (fromString)
-import           GHC.Int (Int64)
+--import           Data.String (fromString)
+--import           GHC.Int (Int64)
 import           System.Process (callProcess)
 
 -- Remove
@@ -48,7 +48,7 @@ data Customer' a b c d e f g h i j = Customer
   }
   deriving Show
 
-type CustomerW = Customer' (O.Field O.SqlInt8)
+type CustomerW = Customer' (O.Field O.SqlInt4)
                            (O.Field O.SqlInt4)
                            (O.Field O.SqlText)
                            (O.Field O.SqlText)
@@ -57,7 +57,7 @@ type CustomerW = Customer' (O.Field O.SqlInt8)
                            (O.Field O.SqlBool)
                            (O.Field O.SqlDate)
                            (O.Field O.SqlTimestamp)
-                           (O.FieldNullable O.SqlInt8)
+                           (O.FieldNullable O.SqlInt4)
 
 $(makeAdaptorAndInstanceInferrable "pCustomer" ''Customer')
 
@@ -73,6 +73,35 @@ customerTable = O.table "customer" (pCustomer (Customer
     , cCreateDate = O.tableField "create_date"
     , cLastUpdate = O.tableField "last_update"
     , cActive     = O.tableField "active"
+    }))
+
+data Payment' a b c d e f = Payment
+  { pPaymentId   :: a
+  , pCustomerId  :: b
+  , pStaffId     :: c
+  , pRentalId    :: d
+  , pAmount      :: e
+  , pPaymentDate :: f
+  }
+  deriving Show
+
+type PaymentW = Payment' (O.Field O.SqlInt4)
+                         (O.Field O.SqlInt4)
+                         (O.Field O.SqlInt4)
+                         (O.Field O.SqlInt4)
+                         (O.Field O.SqlNumeric)
+                         (O.Field O.SqlTimestamp)
+
+$(makeAdaptorAndInstanceInferrable "pPayment" ''Payment')
+
+paymentTable :: O.Table PaymentW PaymentW
+paymentTable = O.table "payment" (pPayment (Payment
+    { pPaymentId   = O.tableField "payment_id"
+    , pCustomerId  = O.tableField "customer_id"
+    , pStaffId     = O.tableField "staff_id"
+    , pRentalId    = O.tableField "rental_id"
+    , pAmount      = O.tableField "amount"
+    , pPaymentDate = O.tableField "payment_date"
     }))
 
 example1 = do
@@ -149,13 +178,46 @@ example3_6 = do
 
 example3_7 = do
   customer <- O.selectTable customerTable
-  let l = Main.length (cFirstName customer)
   where_ (cFirstName customer `O.like` O.sqlString "Bra%"
           .&& cLastName customer ./= O.sqlString "Motley")
   pure (cFirstName customer, cLastName customer)
 
+exampleGroupBy_1 =
+  O.aggregate (P.lmap pCustomerId O.groupBy) (O.selectTable paymentTable)
+
+exampleGroupBy_2 =
+  O.aggregate ((,) <$> P.lmap pCustomerId O.groupBy
+                   <*> P.lmap pAmount O.sum)
+              (O.selectTable paymentTable)
+
+exampleGroupBy_3 = O.aggregate ((,) <$> P.lmap fst O.groupBy
+                                    <*> P.lmap snd O.sum) $ do
+  payment  <- O.selectTable paymentTable
+  customer <- O.selectTable customerTable
+  where_ (pCustomerId payment .== cCustomerId customer)
+  pure (cFirstName customer .++ O.sqlString " " .++ cLastName customer,
+        pAmount payment)
+
+exampleGroupBy_4 = O.aggregate ((,) <$> P.lmap pStaffId O.groupBy
+                                    <*> P.lmap pPaymentDate O.count) $ do
+  payment <- O.selectTable paymentTable
+  pure payment
+
+exampleGroupBy_5 =
+  O.orderBy (O.asc (\(customerId, _, _) -> customerId)) $
+  O.aggregate ((,,) <$> P.lmap pCustomerId O.groupBy
+                                     <*> P.lmap pStaffId O.groupBy
+                                     <*> P.lmap pAmount O.sum) $ do
+  payment <- O.selectTable paymentTable
+  pure payment
+
+exampleGroupBy_6 = O.aggregate ((,) <$> P.lmap fst O.groupBy
+                                    <*> P.lmap snd O.sum) $ do
+  payment <- O.selectTable paymentTable
+  pure (dateOfTimestamp (pPaymentDate payment), pAmount payment)
+
 printNumberedRows :: Show a => [a] -> IO ()
-printNumberedRows = mapM_ print . zip [1..]
+printNumberedRows = mapM_ print . zip [1::Int ..]
 
 main :: IO ()
 main = withDvdRentalConnection $ \conn -> do
@@ -176,6 +238,13 @@ main = withDvdRentalConnection $ \conn -> do
   printNumberedRows =<< O.runSelectI conn exampleOrderBy_2
   printNumberedRows =<< O.runSelectI conn exampleOrderBy_3
   printNumberedRows =<< O.runSelectI conn exampleOrderBy_4
+
+  printNumberedRows =<< O.runSelectI conn exampleGroupBy_1
+  printNumberedRows =<< O.runSelectI conn exampleGroupBy_2
+  printNumberedRows =<< O.runSelectI conn exampleGroupBy_3
+  printNumberedRows =<< O.runSelectI conn exampleGroupBy_4
+  printNumberedRows =<< O.runSelectI conn exampleGroupBy_5
+  printNumberedRows =<< O.runSelectI conn exampleGroupBy_6
 
 withDvdRentalConnection :: Show r => (PGS.Connection -> IO r) -> IO ()
 withDvdRentalConnection f = do
@@ -207,6 +276,9 @@ where_ = O.viaLateral O.restrict
 
 length :: O.Field O.SqlText -> O.Field O.SqlInt4
 length (Column e) = Column (HPQ.FunExpr "length" [e])
+
+dateOfTimestamp :: O.Field O.SqlTimestamp -> O.Field O.SqlDate
+dateOfTimestamp (Column e) = Column (HPQ.FunExpr "date" [e])
 
 withConnectPostgreSQL :: ByteString -> (PGS.Connection -> IO c) -> IO c
 withConnectPostgreSQL connstr =
