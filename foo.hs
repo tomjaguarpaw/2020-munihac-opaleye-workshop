@@ -18,7 +18,7 @@ import qualified Opaleye.Join as J
 import qualified Data.Profunctor as P
 import qualified Data.Profunctor.Product as PP
 import qualified Data.Profunctor.Product.Default as D
-import           Data.Profunctor.Product.TH (makeAdaptorAndInstanceInferrable')
+import           Data.Profunctor.Product.TH (makeAdaptorAndInstanceInferrable)
 
 import           Control.Exception (bracket)
 import           Data.ByteString (ByteString)
@@ -26,6 +26,10 @@ import           Data.ByteString.Char8 (unpack)
 import           Data.String (fromString)
 import           GHC.Int (Int64)
 import           System.Process (callProcess)
+
+-- Remove
+import           Opaleye.Internal.Column (Column(Column))
+import qualified Opaleye.Internal.HaskellDB.PrimQuery as HPQ
 
 tarFile :: FilePath
 tarFile = "/home/tom/Haskell/haskell-opaleye/sql/dvdrental/dvdrental.tar"
@@ -55,7 +59,7 @@ type CustomerW = Customer' (O.Field O.SqlInt8)
                            (O.Field O.SqlTimestamp)
                            (O.FieldNullable O.SqlInt8)
 
-$(makeAdaptorAndInstanceInferrable' ''Customer')
+$(makeAdaptorAndInstanceInferrable "pCustomer" ''Customer')
 
 customerTable :: O.Table CustomerW CustomerW
 customerTable = O.table "customer" (pCustomer (Customer
@@ -70,7 +74,6 @@ customerTable = O.table "customer" (pCustomer (Customer
     , cLastUpdate = O.tableField "last_update"
     , cActive     = O.tableField "active"
     }))
-
 
 example1 = do
   customer <- O.selectTable customerTable
@@ -92,6 +95,47 @@ example4 = do
 example5 = do
   pure (5 * 3 :: O.Field O.SqlInt4)
 
+example3_1 = do
+  customer <- O.selectTable customerTable
+  where_ (cFirstName customer .== O.sqlString "Jamie")
+  pure (cFirstName customer, cLastName customer)
+
+example3_2 = do
+  customer <- O.selectTable customerTable
+  where_ (cFirstName customer .== O.sqlString "Jamie"
+         .&& cLastName customer .== O.sqlString "Waugh")
+  pure (cFirstName customer, cLastName customer)
+
+example3_3 = do
+  customer <- O.selectTable customerTable
+  where_ (cLastName customer .== O.sqlString "Rodriguez"
+         .|| cFirstName customer .== O.sqlString "Adam")
+  pure (cFirstName customer, cLastName customer)
+
+example3_4 = do
+  customer <- O.selectTable customerTable
+  where_ (O.in_ (map O.sqlString ["Ann", "Anna", "Annie"]) (cFirstName customer))
+  pure (cFirstName customer, cLastName customer)
+
+example3_5 = do
+  customer <- O.selectTable customerTable
+  where_ (cFirstName customer `O.like` O.sqlString "Ann%")
+  pure (cFirstName customer, cLastName customer)
+
+example3_6 = do
+  customer <- O.selectTable customerTable
+  let l = Main.length (cFirstName customer)
+  where_ (cFirstName customer `O.like` O.sqlString "A%"
+          .&& 3 .<= l .&& l .<= 5)
+  pure (cFirstName customer, Main.length (cFirstName customer))
+
+example3_7 = do
+  customer <- O.selectTable customerTable
+  let l = Main.length (cFirstName customer)
+  where_ (cFirstName customer `O.like` O.sqlString "Bra%"
+          .&& cLastName customer ./= O.sqlString "Motley")
+  pure (cFirstName customer, cLastName customer)
+
 printNumberedRows :: Show a => [a] -> IO ()
 printNumberedRows = mapM_ print . zip [1..]
 
@@ -102,6 +146,13 @@ main = withDvdRentalConnection $ \conn -> do
   printNumberedRows =<< O.runSelectI conn example3
   printNumberedRows =<< O.runSelectI conn example4
   printNumberedRows =<< O.runSelectI conn example5
+  printNumberedRows =<< O.runSelectI conn example3_1
+  printNumberedRows =<< O.runSelectI conn example3_2
+  printNumberedRows =<< O.runSelectI conn example3_3
+  printNumberedRows =<< O.runSelectI conn example3_4
+  printNumberedRows =<< O.runSelectI conn example3_5
+  printNumberedRows =<< O.runSelectI conn example3_6
+  printNumberedRows =<< O.runSelectI conn example3_7
 
 withDvdRentalConnection :: Show r => (PGS.Connection -> IO r) -> IO ()
 withDvdRentalConnection f = do
@@ -130,6 +181,9 @@ withDvdRentalConnection f = do
     Right r -> putStr "Result: " >> print r
 
 where_ = O.viaLateral O.restrict
+
+length :: O.Field O.SqlText -> O.Field O.SqlInt4
+length (Column e) = Column (HPQ.FunExpr "length" [e])
 
 withConnectPostgreSQL :: ByteString -> (PGS.Connection -> IO c) -> IO c
 withConnectPostgreSQL connstr =
