@@ -95,6 +95,24 @@ example4 = do
 example5 = do
   pure (5 * 3 :: O.Field O.SqlInt4)
 
+exampleOrderBy_1 = do
+  customer <- O.orderBy (O.asc cFirstName) (O.selectTable customerTable)
+  pure (cFirstName customer, cLastName customer)
+
+exampleOrderBy_2 = do
+  customer <- O.orderBy (O.desc cLastName) (O.selectTable customerTable)
+  pure (cFirstName customer, cLastName customer)
+
+exampleOrderBy_3 = do
+  customer <- O.orderBy (O.asc cFirstName <> O.desc cLastName)
+                        (O.selectTable customerTable)
+  pure (cFirstName customer, cLastName customer)
+
+exampleOrderBy_4 = do
+  customer <- O.orderBy (O.desc (Main.length . cFirstName))
+                        (O.selectTable customerTable)
+  pure (cFirstName customer, Main.length (cFirstName customer))
+
 example3_1 = do
   customer <- O.selectTable customerTable
   where_ (cFirstName customer .== O.sqlString "Jamie")
@@ -153,6 +171,11 @@ main = withDvdRentalConnection $ \conn -> do
   printNumberedRows =<< O.runSelectI conn example3_5
   printNumberedRows =<< O.runSelectI conn example3_6
   printNumberedRows =<< O.runSelectI conn example3_7
+
+  printNumberedRows =<< O.runSelectI conn exampleOrderBy_1
+  printNumberedRows =<< O.runSelectI conn exampleOrderBy_2
+  printNumberedRows =<< O.runSelectI conn exampleOrderBy_3
+  printNumberedRows =<< O.runSelectI conn exampleOrderBy_4
 
 withDvdRentalConnection :: Show r => (PGS.Connection -> IO r) -> IO ()
 withDvdRentalConnection f = do
