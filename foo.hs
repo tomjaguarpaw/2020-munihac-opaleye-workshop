@@ -248,6 +248,15 @@ main = withDvdRentalConnection $ \conn -> do
 
 withDvdRentalConnection :: Show r => (PGS.Connection -> IO r) -> IO ()
 withDvdRentalConnection f = do
+  withDvdRentalConnectionString $ \connstr _ -> do
+    withConnectPostgreSQL connstr $ \conn -> do
+      putStrLn "ready to interact with DB."
+
+      f conn
+
+withDvdRentalConnectionString :: Show r
+                              => (ByteString -> String -> IO r) -> IO ()
+withDvdRentalConnectionString f = do
   -- It's important that the user be postgres because the restore
   -- script explicitly assigns roles to postgres.  (It also explicitly
   -- calls the database dvdrental, but it nonetheless seems happy to
@@ -263,14 +272,16 @@ withDvdRentalConnection f = do
     putStr "restoring data..."
     callProcess "pg_restore" ["--dbname", connchars, tarFile]
 
-    withConnectPostgreSQL connstr $ \conn -> do
-      putStrLn "ready to interact with DB."
-
-      f conn
+    f connstr connchars
 
   case e of
     Left l -> putStr "Error: " >> print l
     Right r -> putStr "Result: " >> print r
+
+shDvdRentalConnection s = withDvdRentalConnectionString $ \_ connchars -> do
+  putStrLn "You can access the connstr via $PGCONNSTR"
+  putStrLn "For example: psql $PGCONNSTR"
+  callProcess "sh" ["-c", "export PGCONNSTR=\'" ++ connchars ++ "\'; exec " ++ s]
 
 where_ = O.viaLateral O.restrict
 
