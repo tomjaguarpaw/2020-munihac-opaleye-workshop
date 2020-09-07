@@ -14,6 +14,7 @@ want to follow along by writing your own code examples you should know
 how to clone a Haskell git repository and build it with Cabal (or
 other build tool of your choice).  Familiarity with the list monad
 would be particularly helpful for understanding Opaleye's semantics.
+Familiarity with SQL will also be useful.
 
 ## What's next?
 
