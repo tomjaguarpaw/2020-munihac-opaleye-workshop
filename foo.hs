@@ -13,7 +13,7 @@ import qualified Opaleye as O
 import           Opaleye ((.==), (./=), (.>), (.>=), (.<), (.<=), (.&&), (.||),
                           (.++))
 import           Opaleye.Experimental.Enum (fromFieldToFieldsEnum)
-import           Opaleye.TypeFamilies (TableRecordField, Req, NN, O)
+import           Opaleye.TypeFamilies (TableRecordField, Req, Opt, NN, W, O)
 --import qualified Opaleye.Join as J
 
 import qualified Data.Profunctor as P
@@ -184,7 +184,7 @@ type FilmW = Film' (Maybe (O.Field O.SqlInt4))
                    (O.Field O.SqlTimestamp)
                    (O.Field (O.SqlArray O.SqlText))
 
-type FilmTF f = Film' (TableRecordField f () O.SqlInt4 NN Req)
+type FilmTF f = Film' (TableRecordField f () O.SqlInt4 NN Opt)
                       (TableRecordField f () O.SqlText NN Req)
                       (TableRecordField f () O.SqlText NN Req)
                       (TableRecordField f () O.SqlInt4 NN Req)
@@ -197,8 +197,10 @@ type FilmTF f = Film' (TableRecordField f () O.SqlInt4 NN Req)
                       (TableRecordField f () O.SqlTimestamp NN Req)
                       (TableRecordField f () (O.SqlArray O.SqlText) NN Req)
 
-
 $(makeAdaptorAndInstanceInferrable "pFilm" ''Film')
+
+filmTable' :: O.Table (FilmTF W) (FilmTF O)
+filmTable' = filmTable
 
 filmTable :: O.Table FilmW FilmR
 filmTable = O.table "film" (pFilm (Film
