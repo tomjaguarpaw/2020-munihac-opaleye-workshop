@@ -8,18 +8,20 @@
 
 module Main where
 
-import qualified Database.PostgreSQL.Simple as PGS
-import qualified Database.PostgreSQL.Simple.Options as Options
-import qualified Database.Postgres.Temp as T
 import qualified Opaleye as O
 import           Opaleye ((.==), (./=), (.>), (.>=), (.<), (.<=), (.&&), (.||),
                           (.++))
 import           Opaleye.Experimental.Enum (fromFieldToFieldsEnum)
 --import qualified Opaleye.Join as J
+
 import qualified Data.Profunctor as P
 import qualified Data.Profunctor.Product as PP
 import qualified Data.Profunctor.Product.Default as D
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstanceInferrable)
+
+import qualified Database.PostgreSQL.Simple as PGS
+import qualified Database.PostgreSQL.Simple.Options as Options
+import qualified Database.Postgres.Temp as T
 
 import           Control.Exception (bracket)
 import           Data.ByteString (ByteString)
