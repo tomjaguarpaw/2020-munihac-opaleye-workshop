@@ -15,6 +15,12 @@ least intermediate-level Haskell, including "do" notation.
 should know how to clone a Haskell git repository and build it with
 Cabal (or other build tool of your choice).
 
+* If you want to *run* your own code examples you should have an
+installation of Postgres available.  The tutorial will use
+[tmp-postgres](https://hackage.haskell.org/package/tmp-postgres-1.34.1.0)
+to ensure it does not interfere with any other Postgres database you
+may have.
+
 * Familiarity with the list monad would be particularly helpful for
 understanding Opaleye's semantics.  Familiarity with SQL will also be
 useful.
