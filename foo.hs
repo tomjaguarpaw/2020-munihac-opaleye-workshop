@@ -328,7 +328,7 @@ printNumberedRows :: Show a => [a] -> IO ()
 printNumberedRows = mapM_ print . zip [1::Int ..]
 
 main :: IO ()
-main = withDvdRentalConnection $ \conn -> do
+main = withDvdRentalConnection $ \connchars conn -> do
   printNumberedRows =<< O.runSelectI conn example1
   printNumberedRows =<< O.runSelectI conn example2
   printNumberedRows =<< O.runSelectI conn example3
@@ -357,13 +357,13 @@ main = withDvdRentalConnection $ \conn -> do
   _ <- insertFilm conn
   printNumberedRows =<< O.runSelectI conn (O.selectTable filmTable)
 
-withDvdRentalConnection :: Show r => (PGS.Connection -> IO r) -> IO ()
+withDvdRentalConnection :: Show r => (String -> PGS.Connection -> IO r) -> IO ()
 withDvdRentalConnection f = do
-  withDvdRentalConnectionString $ \connstr _ -> do
+  withDvdRentalConnectionString $ \connstr connchars -> do
     withConnectPostgreSQL connstr $ \conn -> do
       putStrLn "ready to interact with DB."
 
-      f conn
+      f connchars conn
 
 withDvdRentalConnectionString :: Show r
                               => (ByteString -> String -> IO r) -> IO ()
@@ -389,7 +389,9 @@ withDvdRentalConnectionString f = do
     Left l -> putStr "Error: " >> print l
     Right r -> putStr "Result: " >> print r
 
-shDvdRentalConnection s = withDvdRentalConnectionString $ \_ connchars -> do
+shDvdRentalConnection s = withDvdRentalConnectionString $ \_ -> sh s
+
+sh s connchars = do
   putStrLn "You can access the connstr via $PGCONNSTR"
   putStrLn "For example: psql $PGCONNSTR"
   callProcess "sh" ["-c", "export PGCONNSTR=\'" ++ connchars ++ "\'; exec " ++ s]
