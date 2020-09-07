@@ -14,6 +14,7 @@ import qualified Database.Postgres.Temp as T
 import qualified Opaleye as O
 import           Opaleye ((.==), (./=), (.>), (.>=), (.<), (.<=), (.&&), (.||),
                           (.++))
+import           Opaleye.Experimental.Enum (fromFieldToFieldsEnum)
 --import qualified Opaleye.Join as J
 import qualified Data.Profunctor as P
 import qualified Data.Profunctor.Product as PP
@@ -28,14 +29,7 @@ import           Data.ByteString.Char8 (unpack)
 import           System.Process (callProcess)
 
 -- Remove
-import           Database.PostgreSQL.Simple.Internal (Field)
-import           Opaleye.Internal.Column (Column(Column))
-import qualified Opaleye.Internal.RunQuery as RQ
-import qualified Opaleye.Internal.HaskellDB.PrimQuery as HPQ
 import           Opaleye.Internal.Inferrable
-
-unsafeFromFieldRaw :: O.FromField a (Field, Maybe ByteString)
-unsafeFromFieldRaw = RQ.fieldParserQueryRunnerColumn (\f mdata -> pure (f, mdata))
 
 data SqlRating
 
@@ -57,19 +51,6 @@ fromSqlRatingString s = case s of
     "R"     -> Just R
     "NC-17" -> Just NC17
     _       -> Nothing
-
-fromFieldToFieldsEnum :: String
-                      -> (String -> Maybe haskellSum)
-                      -> (haskellSum -> String)
-                      -> (O.ToFields haskellSum (Column sqlEnum),
-                          RQ.FromField sqlEnum haskellSum)
-fromFieldToFieldsEnum type_ from to_ =
-  (O.toToFields (O.unsafeCast type_ . O.sqlString . to_),
-   flip fmap unsafeFromFieldRaw $ \(_, mdata) -> case mdata of
-    Nothing -> error "Unexpected NULL"
-    Just s -> case from (unpack s) of
-      Just r -> r
-      Nothing -> error ("Unexpected: " ++ unpack s))
 
 (fromFieldRating, toFieldsRating) =
   fromFieldToFieldsEnum "mpaa_rating" fromSqlRatingString toSqlRatingString
@@ -263,9 +244,9 @@ exampleOrderBy_3 = do
   pure (cFirstName customer, cLastName customer)
 
 exampleOrderBy_4 = do
-  customer <- O.orderBy (O.desc (Main.length . cFirstName))
+  customer <- O.orderBy (O.desc (O.sqlLength . cFirstName))
                         (O.selectTable customerTable)
-  pure (cFirstName customer, Main.length (cFirstName customer))
+  pure (cFirstName customer, O.sqlLength (cFirstName customer))
 
 example3_1 = do
   customer <- O.selectTable customerTable
@@ -296,10 +277,10 @@ example3_5 = do
 
 example3_6 = do
   customer <- O.selectTable customerTable
-  let l = Main.length (cFirstName customer)
+  let l = O.sqlLength (cFirstName customer)
   where_ (cFirstName customer `O.like` O.sqlString "A%"
           .&& 3 .<= l .&& l .<= 5)
-  pure (cFirstName customer, Main.length (cFirstName customer))
+  pure (cFirstName customer, O.sqlLength (cFirstName customer))
 
 example3_7 = do
   customer <- O.selectTable customerTable
@@ -339,7 +320,7 @@ exampleGroupBy_5 =
 exampleGroupBy_6 = O.aggregate ((,) <$> P.lmap fst O.groupBy
                                     <*> P.lmap snd O.sum) $ do
   payment <- O.selectTable paymentTable
-  pure (dateOfTimestamp (pPaymentDate payment), pAmount payment)
+  pure (O.dateOfTimestamp (pPaymentDate payment), pAmount payment)
 
 printNumberedRows :: Show a => [a] -> IO ()
 printNumberedRows = mapM_ print . zip [1::Int ..]
@@ -412,12 +393,6 @@ shDvdRentalConnection s = withDvdRentalConnectionString $ \_ connchars -> do
   callProcess "sh" ["-c", "export PGCONNSTR=\'" ++ connchars ++ "\'; exec " ++ s]
 
 where_ = O.viaLateral O.restrict
-
-length :: O.Field O.SqlText -> O.Field O.SqlInt4
-length (Column e) = Column (HPQ.FunExpr "length" [e])
-
-dateOfTimestamp :: O.Field O.SqlTimestamp -> O.Field O.SqlDate
-dateOfTimestamp (Column e) = Column (HPQ.FunExpr "date" [e])
 
 timestampOfString = O.unsafeCast "timestamp" . O.sqlString
 
