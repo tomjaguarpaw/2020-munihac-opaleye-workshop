@@ -17,7 +17,7 @@ import           Opaleye ((.==), (./=), (.>), (.>=), (.<), (.<=), (.&&), (.||),
 --import qualified Opaleye.Join as J
 import qualified Data.Profunctor as P
 import qualified Data.Profunctor.Product as PP
---import qualified Data.Profunctor.Product.Default as D
+import qualified Data.Profunctor.Product.Default as D
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstanceInferrable)
 
 import           Control.Exception (bracket)
@@ -28,8 +28,61 @@ import           Data.ByteString.Char8 (unpack)
 import           System.Process (callProcess)
 
 -- Remove
+import           Database.PostgreSQL.Simple.Internal (Field)
 import           Opaleye.Internal.Column (Column(Column))
+import qualified Opaleye.Internal.RunQuery as RQ
 import qualified Opaleye.Internal.HaskellDB.PrimQuery as HPQ
+import           Opaleye.Internal.Inferrable
+
+unsafeFromFieldRaw :: O.FromField a (Field, Maybe ByteString)
+unsafeFromFieldRaw = RQ.fieldParserQueryRunnerColumn (\f mdata -> pure (f, mdata))
+
+data SqlRating
+
+data Rating = G | PG | PG13 | R | NC17 deriving Show
+
+toSqlRatingString :: Rating -> String
+toSqlRatingString r = case r of
+    G    -> "G"
+    PG   -> "PG"
+    PG13 -> "PG-13"
+    R    -> "R"
+    NC17 -> "NC-17"
+
+fromSqlRatingString :: String -> Maybe Rating
+fromSqlRatingString s = case s of
+    "G"     -> Just G
+    "PG"    -> Just PG
+    "PG-13" -> Just PG13
+    "R"     -> Just R
+    "NC-17" -> Just NC17
+    _       -> Nothing
+
+fromFieldToFieldsEnum :: String
+                      -> (String -> Maybe haskellSum)
+                      -> (haskellSum -> String)
+                      -> (O.ToFields haskellSum (Column sqlEnum),
+                          RQ.FromField sqlEnum haskellSum)
+fromFieldToFieldsEnum type_ from to_ =
+  (O.toToFields (O.unsafeCast type_ . O.sqlString . to_),
+   flip fmap unsafeFromFieldRaw $ \(_, mdata) -> case mdata of
+    Nothing -> error "Unexpected NULL"
+    Just s -> case from (unpack s) of
+      Just r -> r
+      Nothing -> error ("Unexpected: " ++ unpack s))
+
+(fromFieldRating, toFieldsRating) =
+  fromFieldToFieldsEnum "mpaa_rating" fromSqlRatingString toSqlRatingString
+
+instance O.DefaultFromField SqlRating Rating where
+  defaultFromField = toFieldsRating
+
+instance rating ~ Rating
+  => D.Default (Inferrable O.FromFields) (O.Column SqlRating) rating where
+  def = Inferrable D.def
+
+instance D.Default O.ToFields Rating (O.Column SqlRating) where
+  def = fromFieldRating
 
 tarFile :: FilePath
 tarFile = "/home/tom/Haskell/haskell-opaleye/sql/dvdrental/dvdrental.tar"
@@ -103,6 +156,72 @@ paymentTable = O.table "payment" (pPayment (Payment
     , pAmount      = O.tableField "amount"
     , pPaymentDate = O.tableField "payment_date"
     }))
+
+data Film' a b c d e f g h i j k l = Film
+  { fFilmId          :: a
+  , fTitle           :: b
+  , fDescription     :: c
+  , fReleaseYear     :: d
+  , fLanguageId      :: e
+  , fRentalDuration  :: f
+  , fRentalRate      :: g
+  , fLength          :: h
+  , fReplacementCost :: i
+  , fRating          :: j
+  , fLastUpdate      :: k
+  , fSpecialFeatures :: l
+  }
+  deriving Show
+
+type FilmW = Film' (O.Field O.SqlInt4)
+                   (O.Field O.SqlText)
+                   (O.Field O.SqlText)
+                   (O.Field O.SqlInt4)
+                   (O.Field O.SqlInt4)
+                   (O.Field O.SqlNumeric)
+                   (O.Field O.SqlNumeric)
+                   (O.Field O.SqlInt4)
+                   (O.Field O.SqlNumeric)
+                   (O.Field SqlRating)
+                   (O.Field O.SqlTimestamp)
+                   (O.Field (O.SqlArray O.SqlText))
+
+$(makeAdaptorAndInstanceInferrable "pFilm" ''Film')
+
+filmTable :: O.Table FilmW FilmW
+filmTable = O.table "film" (pFilm (Film
+    { fFilmId          = O.tableField "film_id"
+    , fTitle           = O.tableField "title"
+    , fDescription     = O.tableField "description"
+    , fReleaseYear     = O.tableField "release_year"
+    , fLanguageId      = O.tableField "language_id"
+    , fRentalDuration  = O.tableField "rental_duration"
+    , fRentalRate      = O.tableField "rental_rate"
+    , fLength          = O.tableField "length"
+    , fReplacementCost = O.tableField "replacement_cost"
+    , fRating          = O.tableField "rating"
+    , fLastUpdate      = O.tableField "last_update"
+    , fSpecialFeatures = O.tableField "special_features"
+    }))
+
+insertFilm conn = O.runInsert_ conn O.Insert
+  { O.iTable      = filmTable
+  , O.iRows       = [ Film { fFilmId          = 9999
+                           , fTitle           = O.sqlString "My title"
+                           , fDescription     = O.sqlString "My description"
+                           , fReleaseYear     = 2001
+                           , fLanguageId      = 1
+                           , fRentalDuration  = 66
+                           , fRentalRate      = 55
+                           , fLength          = 44
+                           , fReplacementCost = 33
+                           , fRating          = O.toFields PG
+                           , fLastUpdate      = timestampOfString "2020-01-01"
+                           , fSpecialFeatures = O.sqlArray id []
+                           }]
+  , O.iReturning  = O.rCount
+  , O.iOnConflict = Nothing
+  }
 
 salesByFilmCategoryView :: O.Select (O.Field O.SqlText, O.Field O.SqlNumeric)
 salesByFilmCategoryView =
@@ -252,6 +371,8 @@ main = withDvdRentalConnection $ \conn -> do
   printNumberedRows =<< O.runSelectI conn exampleGroupBy_5
   printNumberedRows =<< O.runSelectI conn exampleGroupBy_6
   printNumberedRows =<< O.runSelectI conn salesByFilmCategoryView
+  _ <- insertFilm conn
+  printNumberedRows =<< O.runSelectI conn (O.selectTable filmTable)
 
 withDvdRentalConnection :: Show r => (PGS.Connection -> IO r) -> IO ()
 withDvdRentalConnection f = do
@@ -297,6 +418,8 @@ length (Column e) = Column (HPQ.FunExpr "length" [e])
 
 dateOfTimestamp :: O.Field O.SqlTimestamp -> O.Field O.SqlDate
 dateOfTimestamp (Column e) = Column (HPQ.FunExpr "date" [e])
+
+timestampOfString = O.unsafeCast "timestamp" . O.sqlString
 
 withConnectPostgreSQL :: ByteString -> (PGS.Connection -> IO c) -> IO c
 withConnectPostgreSQL connstr =
