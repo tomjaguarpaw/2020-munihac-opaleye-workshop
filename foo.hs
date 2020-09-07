@@ -16,7 +16,7 @@ import           Opaleye ((.==), (./=), (.>), (.>=), (.<), (.<=), (.&&), (.||),
                           (.++))
 --import qualified Opaleye.Join as J
 import qualified Data.Profunctor as P
---import qualified Data.Profunctor.Product as PP
+import qualified Data.Profunctor.Product as PP
 --import qualified Data.Profunctor.Product.Default as D
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstanceInferrable)
 
@@ -103,6 +103,12 @@ paymentTable = O.table "payment" (pPayment (Payment
     , pAmount      = O.tableField "amount"
     , pPaymentDate = O.tableField "payment_date"
     }))
+
+salesByFilmCategoryView :: O.Select (O.Field O.SqlText, O.Field O.SqlNumeric)
+salesByFilmCategoryView =
+  O.selectTable (O.table "sales_by_film_category"
+                   (PP.p2 (O.requiredTableField "category",
+                           O.requiredTableField "total_sales")))
 
 example1 = do
   customer <- O.selectTable customerTable
@@ -245,6 +251,7 @@ main = withDvdRentalConnection $ \conn -> do
   printNumberedRows =<< O.runSelectI conn exampleGroupBy_4
   printNumberedRows =<< O.runSelectI conn exampleGroupBy_5
   printNumberedRows =<< O.runSelectI conn exampleGroupBy_6
+  printNumberedRows =<< O.runSelectI conn salesByFilmCategoryView
 
 withDvdRentalConnection :: Show r => (PGS.Connection -> IO r) -> IO ()
 withDvdRentalConnection f = do
