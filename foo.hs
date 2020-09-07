@@ -2,6 +2,7 @@
 
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -12,6 +13,7 @@ import qualified Opaleye as O
 import           Opaleye ((.==), (./=), (.>), (.>=), (.<), (.<=), (.&&), (.||),
                           (.++))
 import           Opaleye.Experimental.Enum (fromFieldToFieldsEnum)
+import           Opaleye.TypeFamilies (TableRecordField, Req, NN, O)
 --import qualified Opaleye.Join as J
 
 import qualified Data.Profunctor as P
@@ -156,7 +158,7 @@ data Film' a b c d e f g h i j k l = Film
   }
   deriving Show
 
-type FilmW = Film' (O.Field O.SqlInt4)
+type FilmR = Film' (O.Field O.SqlInt4)
                    (O.Field O.SqlText)
                    (O.Field O.SqlText)
                    (O.Field O.SqlInt4)
@@ -169,9 +171,36 @@ type FilmW = Film' (O.Field O.SqlInt4)
                    (O.Field O.SqlTimestamp)
                    (O.Field (O.SqlArray O.SqlText))
 
+type FilmW = Film' (Maybe (O.Field O.SqlInt4))
+                   (O.Field O.SqlText)
+                   (O.Field O.SqlText)
+                   (O.Field O.SqlInt4)
+                   (O.Field O.SqlInt4)
+                   (O.Field O.SqlNumeric)
+                   (O.Field O.SqlNumeric)
+                   (O.Field O.SqlInt4)
+                   (O.Field O.SqlNumeric)
+                   (O.Field SqlRating)
+                   (O.Field O.SqlTimestamp)
+                   (O.Field (O.SqlArray O.SqlText))
+
+type FilmTF f = Film' (TableRecordField f () O.SqlInt4 NN Req)
+                      (TableRecordField f () O.SqlText NN Req)
+                      (TableRecordField f () O.SqlText NN Req)
+                      (TableRecordField f () O.SqlInt4 NN Req)
+                      (TableRecordField f () O.SqlInt4 NN Req)
+                      (TableRecordField f () O.SqlNumeric NN Req)
+                      (TableRecordField f () O.SqlNumeric NN Req)
+                      (TableRecordField f () O.SqlInt4 NN Req)
+                      (TableRecordField f () O.SqlNumeric NN Req)
+                      (TableRecordField f () SqlRating NN Req)
+                      (TableRecordField f () O.SqlTimestamp NN Req)
+                      (TableRecordField f () (O.SqlArray O.SqlText) NN Req)
+
+
 $(makeAdaptorAndInstanceInferrable "pFilm" ''Film')
 
-filmTable :: O.Table FilmW FilmW
+filmTable :: O.Table FilmW FilmR
 filmTable = O.table "film" (pFilm (Film
     { fFilmId          = O.tableField "film_id"
     , fTitle           = O.tableField "title"
@@ -189,7 +218,7 @@ filmTable = O.table "film" (pFilm (Film
 
 insertFilm conn = O.runInsert_ conn O.Insert
   { O.iTable      = filmTable
-  , O.iRows       = [ Film { fFilmId          = 9999
+  , O.iRows       = [ Film { fFilmId          = Nothing
                            , fTitle           = O.sqlString "My title"
                            , fDescription     = O.sqlString "My description"
                            , fReleaseYear     = 2001
@@ -202,9 +231,14 @@ insertFilm conn = O.runInsert_ conn O.Insert
                            , fLastUpdate      = timestampOfString "2020-01-01"
                            , fSpecialFeatures = O.sqlArray id []
                            }]
-  , O.iReturning  = O.rCount
+  , O.iReturning  = O.rReturningI fFilmId
   , O.iOnConflict = Nothing
   }
+
+filmSelect = do
+  film <- O.selectTable filmTable
+  where_ (fFilmId film .> 990)
+  pure film
 
 salesByFilmCategoryView :: O.Select (O.Field O.SqlText, O.Field O.SqlNumeric)
 salesByFilmCategoryView =
@@ -328,7 +362,7 @@ printNumberedRows :: Show a => [a] -> IO ()
 printNumberedRows = mapM_ print . zip [1::Int ..]
 
 main :: IO ()
-main = withDvdRentalConnection $ \connchars conn -> do
+main = withDvdRentalConnection $ \_ conn -> do
   printNumberedRows =<< O.runSelectI conn example1
   printNumberedRows =<< O.runSelectI conn example2
   printNumberedRows =<< O.runSelectI conn example3
@@ -354,8 +388,8 @@ main = withDvdRentalConnection $ \connchars conn -> do
   printNumberedRows =<< O.runSelectI conn exampleGroupBy_5
   printNumberedRows =<< O.runSelectI conn exampleGroupBy_6
   printNumberedRows =<< O.runSelectI conn salesByFilmCategoryView
-  _ <- insertFilm conn
-  printNumberedRows =<< O.runSelectI conn (O.selectTable filmTable)
+  printNumberedRows =<< insertFilm conn
+  printNumberedRows =<< O.runSelectI conn filmSelect
 
 withDvdRentalConnection :: Show r => (String -> PGS.Connection -> IO r) -> IO ()
 withDvdRentalConnection f = do
