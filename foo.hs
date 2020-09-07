@@ -58,14 +58,14 @@ fromSqlRatingString s = case s of
   fromFieldToFieldsEnum "mpaa_rating" fromSqlRatingString toSqlRatingString
 
 instance O.DefaultFromField SqlRating Rating where
-  defaultFromField = toFieldsRating
+  defaultFromField = fromFieldRating
 
 instance rating ~ Rating
   => D.Default (Inferrable O.FromFields) (O.Column SqlRating) rating where
   def = Inferrable D.def
 
 instance D.Default O.ToFields Rating (O.Column SqlRating) where
-  def = fromFieldRating
+  def = toFieldsRating
 
 tarFile :: FilePath
 tarFile = "/home/tom/Haskell/haskell-opaleye/sql/dvdrental/dvdrental.tar"
