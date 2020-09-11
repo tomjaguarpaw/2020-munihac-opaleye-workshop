@@ -12,8 +12,9 @@ import           OtherExamples.View
 import           Connectivity (withDvdRentalConnection)
 
 import qualified Opaleye as O
-import           Opaleye ((.>))
+import           Opaleye ((.>), (.===))
 
+filmSelect :: O.Select FilmR
 filmSelect = do
   film <- O.selectTable filmTable
   O.where_ (fFilmId film .> 990)
@@ -52,3 +53,14 @@ main = withDvdRentalConnection $ \conn -> do
   printNumberedRows =<< O.runSelectI conn salesByFilmCategoryView
   printNumberedRows =<< O.runInsert_ conn OtherExamples.Insert.example1
   printNumberedRows =<< O.runSelectI conn filmSelect
+
+smokeTest :: IO ()
+smokeTest = do
+  withDvdRentalConnection $ \conn -> do
+    works <- O.runSelectI conn $ do
+      r <- O.selectTable filmTable
+      O.where_ (fFilmId r .=== 999)
+      pure (fTitle r .=== O.sqlString "Zoolander Fiction")
+    putStrLn $ case works == [True] of
+      True  -> "smoke test was successful"
+      False -> "SMOKE TEST FAILED!"
