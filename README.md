@@ -97,8 +97,3 @@ mostly work on Mac and may need adjustment for anyone using Windows.
   If anything goes wrong with the smoke test you can report it on the
   workshop Slack channel or [file an
   issue](https://github.com/tomjaguarpaw/2020-munihac-opaleye-workshop/issues).
-
-## What's next?
-
-More details will be announced here before the talk, probably by
-Friday, September 11th.
