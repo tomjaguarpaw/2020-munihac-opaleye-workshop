@@ -2,7 +2,7 @@
 
 ## When is the workshop?
 
-Saturday, September 12th at 15:00–18:00 CEST.  See [the Munihac
+Saturday, 12th September 2020 at 15:00–18:00 CEST.  See [the Munihac
 website](https://munihac.de/2020.html) for any announcements of last
 minute updates to the scheduling.
 
