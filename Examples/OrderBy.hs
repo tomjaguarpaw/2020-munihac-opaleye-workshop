@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -Wno-missing-signatures #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 -- See https://www.postgresqltutorial.com/postgresql-order-by/
 
