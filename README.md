@@ -27,8 +27,19 @@ useful.
 
 ## What will the workshop involve?
 
-We will work through some of the examples on
-<https://www.postgresqltutorial.com/>.
+* We will work through some of the examples on
+  <https://www.postgresqltutorial.com/>.
+
+* I will answer anyone's questions about Opaleye and we will discuss
+  anything about Opaleye that attendees would like to discuss.
+  Suggested topics for questions and discussion include
+
+  * Implementation/internals
+  * Denotational semantics
+  * Testing strategy (property testing)
+  * How
+    [`Default`](https://hackage.haskell.org/package/product-profunctors-0.11.0.0/docs/Data-Profunctor-Product-Default.html)/[product-profunctors](https://github.com/tomjaguarpaw/product-profunctors) work
+  * Philosophy
 
 ## What's next?
 
