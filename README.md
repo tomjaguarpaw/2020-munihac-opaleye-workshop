@@ -4,7 +4,7 @@
 
 Saturday, September 12th at 15:00–18:00 CEST.  See [the Munihac
 website](https://munihac.de/2020.html) for any announcements of last
-minute updates.
+minute updates to the scheduling.
 
 ## Prerequisites
 
