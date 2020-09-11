@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wall -Wno-missing-signatures #-}
-
 module Main where
 
 import           Types.Film
