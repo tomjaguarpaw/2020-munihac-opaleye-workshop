@@ -14,6 +14,30 @@ import           Connectivity (withDvdRentalConnection)
 import qualified Opaleye as O
 import           Opaleye ((.>), (.===))
 
+-- Run this first to check that everything is set up correctly
+--
+-- Things that could go wrong:
+--
+-- * Opaleye hasn't been installed and made available to the REPL
+--
+-- * Postgres isn't installed (initdb needs to be on your PATH)
+--
+-- * The dvdrental database is not available (get it from
+--   https://www.postgresqltutorial.com/postgresql-sample-database/)
+--
+-- * The dvdrental database cannot be found.  Tweak
+--   'Connectivity.tarFile' to point to it.
+smokeTest :: IO ()
+smokeTest = do
+  withDvdRentalConnection $ \conn -> do
+    works <- O.runSelectI conn $ do
+      r <- O.selectTable filmTable
+      O.where_ (fFilmId r .=== 999)
+      pure (fTitle r .=== O.sqlString "Zoolander Fiction")
+    putStrLn $ case works == [True] of
+      True  -> "smoke test was successful"
+      False -> "SMOKE TEST FAILED!"
+
 filmSelect :: O.Select FilmR
 filmSelect = do
   film <- O.selectTable filmTable
@@ -53,14 +77,3 @@ main = withDvdRentalConnection $ \conn -> do
   printNumberedRows =<< O.runSelectI conn salesByFilmCategoryView
   printNumberedRows =<< O.runInsert_ conn OtherExamples.Insert.example1
   printNumberedRows =<< O.runSelectI conn filmSelect
-
-smokeTest :: IO ()
-smokeTest = do
-  withDvdRentalConnection $ \conn -> do
-    works <- O.runSelectI conn $ do
-      r <- O.selectTable filmTable
-      O.where_ (fFilmId r .=== 999)
-      pure (fTitle r .=== O.sqlString "Zoolander Fiction")
-    putStrLn $ case works == [True] of
-      True  -> "smoke test was successful"
-      False -> "SMOKE TEST FAILED!"
