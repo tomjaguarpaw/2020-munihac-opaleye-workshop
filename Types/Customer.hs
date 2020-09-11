@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-missing-signatures #-}
-
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
