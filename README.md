@@ -64,13 +64,13 @@ mostly work on Mac and may need adjustment for anyone using Windows.
   $ cabal v2-build
   ```
 
-* Make sure you have Postgres installed (you can do this in parallel
-  with the previous step)
+* Make sure you have Postgres and the development libraries installed
+  (you can do this in parallel with the previous step)
 
   For example on Debian
 
   ```
-  sudo apt-get install postgresql-11
+  sudo apt-get install postgresql-11 libpq-dev
   ```
 
 * Download the sample database from [PostgreSQL Sample
