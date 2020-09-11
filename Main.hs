@@ -30,11 +30,12 @@ import           Opaleye ((.>), (.===))
 smokeTest :: IO ()
 smokeTest = do
   withDvdRentalConnection $ \conn -> do
-    works <- O.runSelectI conn $ do
+    actual <- O.runSelectI conn $ do
       r <- O.selectTable filmTable
       O.where_ (fFilmId r .=== 999)
       pure (fTitle r .=== O.sqlString "Zoolander Fiction")
-    putStrLn $ case works == [True] of
+    let expected = [True]
+    putStrLn $ case actual == expected of
       True  -> "smoke test was successful"
       False -> "SMOKE TEST FAILED!"
 
