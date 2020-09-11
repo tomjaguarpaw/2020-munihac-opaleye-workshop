@@ -12,7 +12,7 @@ import           System.Process (callProcess)
 import qualified System.Environment
 
 tarFile :: FilePath
-tarFile = "/home/tom/Haskell/haskell-opaleye/sql/dvdrental/dvdrental.tar"
+tarFile = "/tmp/dvdrental.tar"
 
 -- Create a temporary DB initialised with the DVD Rental data and
 -- run the callback on it.
