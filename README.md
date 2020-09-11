@@ -53,7 +53,7 @@ mostly work on Mac and may need adjustment for anyone using Windows.
 
 * DO THIS STEP AS EARLY AS POSSIBLE!
 
-  Install and build the example database.  Building `aeson` (one of
+  Install and build the workshop repository.  Building `aeson` (one of
   the dependencies) can take a long time so it would be a good idea to
   do this part well before the workshop.
 
