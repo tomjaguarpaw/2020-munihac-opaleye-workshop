@@ -18,10 +18,16 @@ import           Opaleye.Internal.Inferrable
 import qualified Data.Profunctor.Product.Default as D
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstanceInferrable)
 
+-- { Implementing a Postgres ENUM type
+
+-- Define a new type to represent the value on the SQL side
 data SqlRating
 
+-- Define a new sum type to represent all possible values of the ENUM
+-- on the Haskell side
 data Rating = G | PG | PG13 | R | NC17 deriving Show
 
+-- Write a function that converts to the string representation of the ENUM
 toSqlRatingString :: Rating -> String
 toSqlRatingString r = case r of
     G    -> "G"
@@ -30,6 +36,7 @@ toSqlRatingString r = case r of
     R    -> "R"
     NC17 -> "NC-17"
 
+-- Write a function that converts from the string representation of the ENUM
 fromSqlRatingString :: String -> Maybe Rating
 fromSqlRatingString s = case s of
     "G"     -> Just G
@@ -39,8 +46,12 @@ fromSqlRatingString s = case s of
     "NC-17" -> Just NC17
     _       -> Nothing
 
+-- Create the type class instance method implementations by providing
+-- the mappers and the type name
 (fromFieldRating, toFieldsRating) =
   fromFieldToFieldsEnum "mpaa_rating" fromSqlRatingString toSqlRatingString
+
+-- Implement the typeclasses
 
 instance O.DefaultFromField SqlRating Rating where
   defaultFromField = fromFieldRating
@@ -51,6 +62,8 @@ instance rating ~ Rating
 
 instance D.Default O.ToFields Rating (O.Column SqlRating) where
   def = toFieldsRating
+
+-- Finished implementing the ENUM type! }
 
 data Film' a b c d e f g h i j k l = Film
   { fFilmId          :: a
