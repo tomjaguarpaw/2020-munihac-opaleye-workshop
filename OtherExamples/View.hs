@@ -2,8 +2,6 @@ module OtherExamples.View where
 
 import qualified Opaleye as O
 
-import           Types.Film
-
 import qualified Data.Profunctor.Product as PP
 
 -- To make a view you just make a Table and then select from it
