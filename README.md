@@ -25,6 +25,11 @@ may have.
 understanding Opaleye's semantics.  Familiarity with SQL will also be
 useful.
 
+## What will the workshop involve?
+
+We will work through some of the examples on
+<https://www.postgresqltutorial.com/>.
+
 ## What's next?
 
 More details will be announced here before the talk, probably by
