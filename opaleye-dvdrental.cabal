@@ -1,0 +1,44 @@
+name:            opaleye-dvdrental
+copyright:       Copyright (c) Tom Ellis
+version:         0.0.0.0
+synopsis:        An example database for Opaleye
+description:     An example database for Opaleye
+homepage:        https://github.com/tomjaguarpaw/2020-munihac-opaleye-workshop
+bug-reports:     https://github.com/tomjaguarpaw/2020-munihac-opaleye-workshop/issues
+license:         BSD3
+license-file:    LICENSE
+author:          Tom Ellis
+maintainer:      Tom Ellis
+category:        Database
+build-type:      Simple
+cabal-version:   >= 1.18
+extra-doc-files: README.md
+
+source-repository head
+  type:     git
+  location: https://github.com/tomjaguarpaw/2020-munihac-opaleye-workshop.git
+
+library
+  default-language: Haskell2010
+  hs-source-dirs: .
+  build-depends: base,
+                 tmp-postgres==1.34.1.0,
+                 postgresql-simple,
+                 postgres-options,
+                 bytestring,
+                 process,
+                 opaleye==0.7.1.0,
+                 profunctors,
+                 product-profunctors
+  exposed-modules: Main,
+                   Connectivity,
+                   Examples.GroupBy,
+                   Examples.Select,
+                   Examples.OrderBy,
+                   Examples.Where,
+                   OtherExamples.View,
+                   OtherExamples.Insert,
+                   Types.Payment,
+                   Types.Film,
+                   Types.Customer
+  ghc-options:     -Wall -Wcompat
