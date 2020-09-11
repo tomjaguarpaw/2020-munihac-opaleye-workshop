@@ -18,7 +18,7 @@ example1 = O.Insert
                            , fLength          = 44
                            , fReplacementCost = 33
                            , fRating          = O.toFields PG
-                           , fLastUpdate      = timestampOfString "2020-01-01"
+                           , fLastUpdate      = Nothing
                            , fSpecialFeatures = O.sqlArray id []
                            }]
   , O.iReturning  = O.rReturningI fFilmId
