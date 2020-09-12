@@ -25,7 +25,18 @@ data Customer' a b c d e f g h i j = Customer
   }
   deriving Show
 
-type CustomerW = Customer' (O.Field O.SqlInt4)
+type CustomerW = Customer' (Maybe (O.Field O.SqlInt4))
+                           (O.Field O.SqlInt4)
+                           (O.Field O.SqlText)
+                           (O.Field O.SqlText)
+                           (O.FieldNullable O.SqlText)
+                           (O.Field O.SqlInt4)
+                           (O.Field O.SqlBool)
+                           (O.Field O.SqlDate)
+                           (Maybe (O.Field O.SqlTimestamp))
+                           (O.FieldNullable O.SqlInt4)
+
+type CustomerR = Customer' (O.Field O.SqlInt4)
                            (O.Field O.SqlInt4)
                            (O.Field O.SqlText)
                            (O.Field O.SqlText)
@@ -38,7 +49,7 @@ type CustomerW = Customer' (O.Field O.SqlInt4)
 
 $(makeAdaptorAndInstanceInferrable "pCustomer" ''Customer')
 
-customerTable :: O.Table CustomerW CustomerW
+customerTable :: O.Table CustomerW CustomerR
 customerTable = O.table "customer" (pCustomer (Customer
     { cCustomerId = O.tableField "customer_id"
     , cStoreId    = O.tableField "store_id"

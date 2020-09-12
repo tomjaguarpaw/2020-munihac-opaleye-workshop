@@ -30,7 +30,7 @@ timestampOfString = O.unsafeCast "timestamp" . O.sqlString
 
 example2 = O.Insert
   { O.iTable      = customerTable
-  , O.iRows       = [ Customer { cCustomerId = 12345678
+  , O.iRows       = [ Customer { cCustomerId = Nothing
                                , cStoreId    = 1
                                , cFirstName  = O.sqlString "Tom"
                                , cLastName   = O.sqlString "Ellis"
@@ -40,8 +40,7 @@ example2 = O.Insert
                                , cCreateDate =
                                  O.dateOfTimestamp (timestampOfString
                                                    "2020-09-12")
-                               , cLastUpdate = timestampOfString
-                                                   "2020-09-12"
+                               , cLastUpdate = Nothing
                                , cActive     = O.null
                                }]
   , O.iReturning  = O.rReturningI cCustomerId
