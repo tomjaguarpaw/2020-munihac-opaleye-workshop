@@ -35,6 +35,7 @@ useful.
   Suggested topics for questions and discussion include
 
   * Implementation/internals
+  * How to add additional type safety to a schema
   * Denotational semantics
   * Testing strategy (property testing)
   * How
