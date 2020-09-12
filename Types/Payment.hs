@@ -9,6 +9,8 @@
 
 module Types.Payment where
 
+import Types.Customer
+
 import qualified Opaleye as O
 
 import           Data.Profunctor.Product.TH (makeAdaptorAndInstanceInferrable)
@@ -23,19 +25,24 @@ data Payment' a b c d e f = Payment
   }
   deriving Show
 
-type PaymentW = Payment' (O.Field O.SqlInt4)
-                         (O.Field O.SqlInt4)
+newtype PaymentId a = PaymentId a
+
+type PaymentW = Payment' (PaymentId (O.Field O.SqlInt4))
+                         (CustomerId (O.Field O.SqlInt4))
                          (O.Field O.SqlInt4)
                          (O.Field O.SqlInt4)
                          (O.Field O.SqlNumeric)
                          (O.Field O.SqlTimestamp)
 
 $(makeAdaptorAndInstanceInferrable "pPayment" ''Payment')
+$(makeAdaptorAndInstanceInferrable "pPaymentId_" ''PaymentId)
 
 paymentTable :: O.Table PaymentW PaymentW
 paymentTable = O.table "payment" (pPayment (Payment
-    { pPaymentId   = O.tableField "payment_id"
-    , pCustomerId  = O.tableField "customer_id"
+    { pPaymentId   =
+         pPaymentId_ (PaymentId (O.tableField "payment_id"))
+    , pCustomerId  =
+         pCustomerId_ (CustomerId (O.tableField "customer_id"))
     , pStaffId     = O.tableField "staff_id"
     , pRentalId    = O.tableField "rental_id"
     , pAmount      = O.tableField "amount"

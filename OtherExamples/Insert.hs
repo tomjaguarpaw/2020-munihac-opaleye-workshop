@@ -30,7 +30,7 @@ timestampOfString = O.unsafeCast "timestamp" . O.sqlString
 
 example2 = O.Insert
   { O.iTable      = customerTable
-  , O.iRows       = [ Customer { cCustomerId = Nothing
+  , O.iRows       = [ Customer { cCustomerId = CustomerId Nothing
                                , cStoreId    = 1
                                , cFirstName  = O.sqlString "Tom"
                                , cLastName   = O.sqlString "Ellis"
