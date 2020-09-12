@@ -37,6 +37,8 @@ library
                    Examples.OrderBy,
                    Examples.Where,
                    OtherExamples.Delete,
+                   OtherExamples.InnerJoin,
+                   OtherExamples.LeftJoin,
                    OtherExamples.Update,
                    OtherExamples.View,
                    OtherExamples.Insert,
@@ -44,5 +46,6 @@ library
                    Types.Payment,
                    Types.Film,
                    Types.FilmActor,
+                   Types.Inventory,
                    Types.Customer
   ghc-options:     -Wall -Wcompat
