@@ -48,6 +48,7 @@ The following instructions will work on Linux.  The will probably
 mostly work on Mac and may need adjustment for anyone using Windows.
 
 * Make sure you have GHC >= 8.6 and a recent version of Cabal
+  (probably >= 3.0.0.0)
 
   If you don't have them you might want to obtain them using
   [ghcup](https://www.haskell.org/ghcup/).
