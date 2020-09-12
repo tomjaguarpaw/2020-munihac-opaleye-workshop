@@ -6,7 +6,9 @@ import           Examples.GroupBy
 import           Examples.OrderBy
 import           Examples.Select
 import           Examples.Where
+import           OtherExamples.Delete
 import           OtherExamples.Insert
+import           OtherExamples.Update
 import           OtherExamples.View
 
 import           Connectivity (withDvdRentalConnection)
@@ -77,4 +79,7 @@ main = withDvdRentalConnection $ \conn -> do
   printNumberedRows =<< O.runSelectI conn Examples.GroupBy.example6
   printNumberedRows =<< O.runSelectI conn salesByFilmCategoryView
   printNumberedRows =<< O.runInsert_ conn OtherExamples.Insert.example1
+  printNumberedRows =<< O.runSelectI conn filmSelect
+  _ <- OtherExamples.Delete.example1 conn
+  _ <- O.runUpdate_ conn OtherExamples.Update.example1
   printNumberedRows =<< O.runSelectI conn filmSelect

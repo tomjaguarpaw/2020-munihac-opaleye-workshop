@@ -36,9 +36,13 @@ library
                    Examples.Select,
                    Examples.OrderBy,
                    Examples.Where,
+                   OtherExamples.Delete,
+                   OtherExamples.Update,
                    OtherExamples.View,
                    OtherExamples.Insert,
+                   Types.Actor,
                    Types.Payment,
                    Types.Film,
+                   Types.FilmActor,
                    Types.Customer
   ghc-options:     -Wall -Wcompat
