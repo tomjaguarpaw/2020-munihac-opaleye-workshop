@@ -21,6 +21,7 @@ withDvdRentalConnection f = do
   withDvdRentalConnectionString $ \connstr _ -> do
     putStr "connecting..."
     withConnectPostgreSQL connstr $ \conn -> do
+      putStrLn "connected"
       f conn
 
 -- Create a temporary DB initialised with the DVD Rental data and run
