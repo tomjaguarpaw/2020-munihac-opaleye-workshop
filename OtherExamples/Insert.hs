@@ -5,6 +5,7 @@ module OtherExamples.Insert where
 import qualified Opaleye as O
 
 import           Types.Film
+import           Types.Customer
 
 example1 = O.Insert
   { O.iTable      = filmTable
@@ -26,3 +27,23 @@ example1 = O.Insert
   }
 
 timestampOfString = O.unsafeCast "timestamp" . O.sqlString
+
+example2 = O.Insert
+  { O.iTable      = customerTable
+  , O.iRows       = [ Customer { cCustomerId = 12345678
+                               , cStoreId    = 1
+                               , cFirstName  = O.sqlString "Tom"
+                               , cLastName   = O.sqlString "Ellis"
+                               , cEmail      = O.null
+                               , cAddressId  = 1
+                               , cActiveBool = O.sqlBool False
+                               , cCreateDate =
+                                 O.dateOfTimestamp (timestampOfString
+                                                   "2020-09-12")
+                               , cLastUpdate = timestampOfString
+                                                   "2020-09-12"
+                               , cActive     = O.null
+                               }]
+  , O.iReturning  = O.rReturningI cCustomerId
+  , O.iOnConflict = Nothing
+  }

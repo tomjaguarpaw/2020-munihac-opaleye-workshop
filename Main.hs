@@ -83,6 +83,7 @@ main = withDvdRentalConnection $ \conn -> do
   printNumberedRows =<< O.runSelectI conn Examples.GroupBy.example6
   printNumberedRows =<< O.runSelectI conn salesByFilmCategoryView
   printNumberedRows =<< O.runInsert_ conn OtherExamples.Insert.example1
+  printNumberedRows =<< O.runInsert_ conn OtherExamples.Insert.example2
   printNumberedRows =<< O.runSelectI conn filmSelect
   _ <- OtherExamples.Delete.example1 conn
   _ <- O.runUpdate_ conn OtherExamples.Update.example1
