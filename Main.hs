@@ -10,6 +10,8 @@ import           Examples.Select
 import           Examples.Where
 import           OtherExamples.Delete
 import           OtherExamples.Insert
+import           OtherExamples.InnerJoin
+import           OtherExamples.LeftJoin
 import           OtherExamples.Update
 import           OtherExamples.View
 
@@ -85,3 +87,6 @@ main = withDvdRentalConnection $ \conn -> do
   _ <- OtherExamples.Delete.example1 conn
   _ <- O.runUpdate_ conn OtherExamples.Update.example1
   printNumberedRows =<< O.runSelectI conn filmSelect
+
+  printNumberedRows =<< O.runSelectI conn OtherExamples.InnerJoin.example1
+  printNumberedRows =<< O.runSelectI conn OtherExamples.LeftJoin.example1
