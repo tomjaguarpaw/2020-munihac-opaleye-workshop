@@ -7,6 +7,10 @@ import           Opaleye ((.++))
 
 import           Types.Film
 
+-- "Electric Boogaloo" has been voted the best movie sequel subtitle
+-- so let's make all our films great by adding it to all of them!
+--
+-- https://www.ranker.com/list/funniest-movie-sequel-titles/carlybobarly
 example1 = O.Update
   { O.uTable      = filmTable
   , O.uUpdateWith = O.updateEasy
