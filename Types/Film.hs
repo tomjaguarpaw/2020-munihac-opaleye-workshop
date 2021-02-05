@@ -11,7 +11,10 @@ module Types.Film where
 
 import qualified Opaleye as O
 
-import           Opaleye.Experimental.Enum (fromFieldToFieldsEnum)
+import           Opaleye.Experimental.Enum (EnumMapper,
+                                            enumMapper,
+                                            enumFromField,
+                                            enumToFields)
 import           Opaleye.TypeFamilies (TableRecordField, Req, Opt, NN, W, O)
 import           Opaleye.Internal.Inferrable
 
@@ -48,20 +51,20 @@ fromSqlRatingString s = case s of
 
 -- Create the type class instance method implementations by providing
 -- the mappers and the type name
-(fromFieldRating, toFieldsRating) =
-  fromFieldToFieldsEnum "mpaa_rating" fromSqlRatingString toSqlRatingString
+sqlRatingMapper :: EnumMapper SqlRating Rating
+sqlRatingMapper = enumMapper "mpaa_rating" fromSqlRatingString toSqlRatingString
 
 -- Implement the typeclasses
 
 instance O.DefaultFromField SqlRating Rating where
-  defaultFromField = fromFieldRating
+  defaultFromField = enumFromField sqlRatingMapper
 
 instance rating ~ Rating
   => D.Default (Inferrable O.FromFields) (O.Column SqlRating) rating where
   def = Inferrable D.def
 
 instance D.Default O.ToFields Rating (O.Column SqlRating) where
-  def = toFieldsRating
+  def = enumToFields sqlRatingMapper
 
 -- Finished implementing the ENUM type! }
 
