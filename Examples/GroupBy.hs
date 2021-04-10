@@ -36,28 +36,27 @@ example2_with_arrows =
     O.restrict -< snd whatever O..== O.unsafeCoerceField (O.toFields (0.99 :: Double) :: O.Field O.SqlFloat8)
     returnA -< whatever
 
-example3 = O.aggregate ((,) <$> P.lmap fst O.groupBy
-                            <*> P.lmap snd O.sum) $ do
+example3 = O.aggregateEasy $ do
   payment  <- O.selectTable paymentTable
   customer <- O.selectTable customerTable
   O.where_ (pCustomerId payment .=== cCustomerId customer)
-  pure (cFirstName customer .++ O.sqlString " " .++ cLastName customer,
-        pAmount payment)
+  pure (O.agg O.groupBy (cFirstName customer .++ O.sqlString " " .++ cLastName customer),
+        O.agg O.sum (pAmount payment))
 
-example4 = O.aggregate ((,) <$> P.lmap pStaffId O.groupBy
-                            <*> P.lmap pPaymentDate O.count) $ do
+example4 = O.aggregateEasy $ do
   payment <- O.selectTable paymentTable
-  pure payment
+  pure (O.agg O.groupBy (pStaffId payment),
+        O.agg O.count (pPaymentDate payment))
 
 example5 =
   O.orderBy (O.asc (\(CustomerId customerId, _, _) -> customerId)) $
-  O.aggregate ((,,) <$> P.lmap pCustomerId (pNewtype O.groupBy)
-                    <*> P.lmap pStaffId O.groupBy
-                    <*> P.lmap pAmount O.sum) $ do
+  O.aggregateEasy $ do
   payment <- O.selectTable paymentTable
-  pure payment
+  pure (O.agg (pNewtype O.groupBy) (pCustomerId payment),
+        O.agg O.groupBy (pStaffId payment),
+        O.agg O.sum (pAmount payment))
 
-example6 = O.aggregate ((,) <$> P.lmap fst O.groupBy
-                            <*> P.lmap snd O.sum) $ do
+example6 = O.aggregateEasy $ do
   payment <- O.selectTable paymentTable
-  pure (O.dateOfTimestamp (pPaymentDate payment), pAmount payment)
+  pure (O.agg O.groupBy (O.dateOfTimestamp (pPaymentDate payment)),
+        O.agg O.sum (pAmount payment))
