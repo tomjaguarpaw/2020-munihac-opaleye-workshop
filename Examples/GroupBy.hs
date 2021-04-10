@@ -18,9 +18,10 @@ example1 =
               (O.selectTable paymentTable)
 
 example2 =
-  O.aggregate ((,) <$> P.lmap pCustomerId (pNewtype O.groupBy)
-                   <*> P.lmap pAmount O.sum)
-              (O.selectTable paymentTable)
+  O.aggregateEasy $ do
+    payment <- O.selectTable paymentTable
+    pure (O.agg (pNewtype O.groupBy) (pCustomerId payment),
+          O.agg O.sum (pAmount payment))
 
 example3 = O.aggregate ((,) <$> P.lmap fst O.groupBy
                             <*> P.lmap snd O.sum) $ do
