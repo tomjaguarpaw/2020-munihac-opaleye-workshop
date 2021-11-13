@@ -15,7 +15,6 @@ import           Opaleye.Experimental.Enum (EnumMapper,
                                             enumMapper,
                                             enumFromField,
                                             enumToFields)
-import           Opaleye.TypeFamilies (TableRecordField, Req, Opt, NN, W, O)
 import           Opaleye.Internal.Inferrable
 
 import qualified Data.Profunctor.Product.Default as D
@@ -110,23 +109,7 @@ type FilmW = Film' (Maybe (O.Field O.SqlInt4))
                    (Maybe (O.Field O.SqlTimestamp))
                    (O.Field (O.SqlArray O.SqlText))
 
-type FilmTF f = Film' (TableRecordField f () O.SqlInt4 NN Opt)
-                      (TableRecordField f () O.SqlText NN Req)
-                      (TableRecordField f () O.SqlText NN Req)
-                      (TableRecordField f () O.SqlInt4 NN Req)
-                      (TableRecordField f () O.SqlInt4 NN Req)
-                      (TableRecordField f () O.SqlNumeric NN Req)
-                      (TableRecordField f () O.SqlNumeric NN Req)
-                      (TableRecordField f () O.SqlInt4 NN Req)
-                      (TableRecordField f () O.SqlNumeric NN Req)
-                      (TableRecordField f () SqlRating NN Req)
-                      (TableRecordField f () O.SqlTimestamp NN Opt)
-                      (TableRecordField f () (O.SqlArray O.SqlText) NN Req)
-
 $(makeAdaptorAndInstanceInferrable "pFilm" ''Film')
-
-filmTable' :: O.Table (FilmTF W) (FilmTF O)
-filmTable' = filmTable
 
 filmTable :: O.Table FilmW FilmR
 filmTable = O.table "film" (pFilm (Film
