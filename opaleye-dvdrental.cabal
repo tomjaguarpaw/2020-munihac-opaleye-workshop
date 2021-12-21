@@ -27,7 +27,7 @@ library
                  postgres-options,
                  bytestring,
                  process,
-                 opaleye==0.8.0.0,
+                 opaleye==0.8.0.1,
                  profunctors,
                  product-profunctors==0.11.0.3
   exposed-modules: Main,
