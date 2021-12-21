@@ -29,7 +29,7 @@ library
                  process,
                  opaleye==0.8.0.0,
                  profunctors,
-                 product-profunctors==0.11.0.0
+                 product-profunctors==0.11.0.3
   exposed-modules: Main,
                    Connectivity,
                    Examples.GroupBy,
