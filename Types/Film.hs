@@ -59,7 +59,7 @@ instance O.DefaultFromField SqlRating Rating where
   defaultFromField = enumFromField sqlRatingMapper
 
 instance rating ~ Rating
-  => D.Default (Inferrable O.FromFields) (O.Column SqlRating) rating where
+  => D.Default (Inferrable O.FromField) SqlRating rating where
   def = Inferrable D.def
 
 instance D.Default O.ToFields Rating (O.Column SqlRating) where
