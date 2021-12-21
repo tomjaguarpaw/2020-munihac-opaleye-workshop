@@ -71,7 +71,8 @@ withPath paths f = bracket
 -- withConfig, but adds to the PATH some typical locations that initdb
 -- might be found (Debian doesn't put initdb on the PATH).
 withConfigPath :: T.Config -> (T.DB -> IO a) -> IO (Either T.StartError a)
-withConfigPath config f = withPath [ "/usr/lib/postgresql/12/bin"
+withConfigPath config f = withPath [ "/usr/lib/postgresql/13/bin"
+                                   , "/usr/lib/postgresql/12/bin"
                                    , "/usr/lib/postgresql/11/bin"
                                    , "/usr/lib/postgresql/10/bin"
                                    , "/usr/lib/postgresql/9/bin" ]
